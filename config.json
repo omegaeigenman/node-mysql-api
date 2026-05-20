@@ -1,19 +1,19 @@
 {
     "database": {
-        "host": "localhost",
+        "host": "153.92.15.31",
         "port": 3306,
-        "user": "root",
-        "password": "root1234",
-        "database": "node_mysql_api"
+        "user": "u875409848_omega",
+        "password": "2qW^sUg=M",
+        "database": "u875409848_omega"
     },
-    "secret": "SUPER_SECRET_KEY_REPLACE_ME_IN_PRODUCTION",
-    "emailFrom": "libby.bayer12@ethereal.email",
+    "secret": "2fe9081f55e388996598bdf6cbb19bfa39aa4fde3a8f9bb96c4924fd3aadea5d",
+    "emailFrom": "lennie59@ethereal.email",
     "smtpOptions": {
         "host": "smtp.ethereal.email",
         "port": 587,
         "auth": {
-            "user": "libby.bayer12@ethereal.email",
-            "pass": "PZxNaZ1CtFxtqTEpff"
+            "user": "lennie59@ethereal.email",
+            "pass": "yH1KqeXv4aUekkSS2n"
         }
     }
 }
