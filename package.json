@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/server.js",
     "build": "tsc",
-    "start:dev": "nodemon --exec ts-node ./server.ts"
+  "start": "node dist/server.js",
+  "start:dev": "nodemon --exec ts-node ./server.ts"
   },
   "keywords": [],
   "author": "",
