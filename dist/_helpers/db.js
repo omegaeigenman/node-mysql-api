@@ -1,44 +1,46 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const config_json_1 = __importDefault(require("../config.json"));
-const sequelize_1 = require("sequelize");
-const account_model_1 = __importDefault(require("../accounts/account.model"));
-const refresh_token_model_1 = __importDefault(require("../accounts/refresh-token.model"));
+const config = require('../config.json');
+const mysql = require('mysql2/promise');
+const { Sequelize } = require('sequelize');
 
-const db = {};
-exports.default = db;
+module.exports = db = {};
+
 initialize();
 
 async function initialize() {
-    const database = process.env.DB_NAME || config_json_1.default.database.database;
-    const user     = process.env.DB_USER || config_json_1.default.database.user;
-    const password = process.env.DB_PASSWORD || config_json_1.default.database.password;
-    const host     = process.env.DB_HOST || config_json_1.default.database.host;
-    const port     = parseInt(process.env.DB_PORT || config_json_1.default.database.port);
+    // Prefer env vars (production); fall back to config.json (local dev)
+    const host     = process.env.DB_HOST     || config.database.host;
+    const port     = parseInt(process.env.DB_PORT || config.database.port, 10);
+    const user     = process.env.DB_USER     || config.database.user;
+    const password = process.env.DB_PASSWORD || config.database.password;
+    const database = process.env.DB_NAME     || config.database.database;
+    const useSSL   = (process.env.DB_SSL || '').toLowerCase() === 'true';
 
-    const sequelize = new sequelize_1.Sequelize(database, user, password, {
+    // Auto-create DB only on local (managed DBs already have the database)
+    if (!useSSL) {
+        const connection = await mysql.createConnection({ host, port, user, password });
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+        await connection.end();
+    }
+
+    const sequelize = new Sequelize(database, user, password, {
         host,
         port,
         dialect: 'mysql',
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        },
-        logging: false
+        dialectOptions: useSSL
+            ? { ssl: { require: true, rejectUnauthorized: false } }
+            : {},
+        pool: { max: 2, min: 0, idle: 10000 } // small pool — Vercel is serverless
     });
 
-    await sequelize.authenticate();
+    // Models — adjust to match your existing model files
+    const Account      = require('../accounts/account.model')(sequelize);
+    const RefreshToken = require('../accounts/refresh-token.model')(sequelize);
 
-    db.Account = (0, account_model_1.default)(sequelize);
-    db.RefreshToken = (0, refresh_token_model_1.default)(sequelize);
+    Account.hasMany(RefreshToken, { onDelete: 'CASCADE' });
+    RefreshToken.belongsTo(Account);
 
-    db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
-    db.RefreshToken.belongsTo(db.Account);
+    db.Account = Account;
+    db.RefreshToken = RefreshToken;
 
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
 }

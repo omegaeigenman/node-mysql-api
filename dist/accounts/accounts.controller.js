@@ -199,7 +199,11 @@ function _delete(req, res, next) {
 function setTokenCookie(res, token) {
     const cookieOptions = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        secure: (process.env.COOKIE_SECURE || 'false')
+            .toLowerCase() === 'true',
+        sameSite: process.env.COOKIE_SAMESITE || 'lax'
     };
+
     res.cookie('refreshToken', token, cookieOptions);
 }

@@ -174,7 +174,13 @@ async function hash(password) {
     return await bcryptjs_1.default.hash(password, 10);
 }
 function generateJwtToken(account) {
-    return jsonwebtoken_1.default.sign({ sub: account.id, id: account.id }, config_json_1.default.secret, { expiresIn: '15m' });
+    const secret = process.env.JWT_SECRET || config.secret;
+
+    return jwt.sign(
+        { sub: account.id, id: account.id },
+        secret,
+        { expiresIn: '15m' }
+    );
 }
 function generateRefreshToken(account, ipAddress) {
     return new db_1.default.RefreshToken({
