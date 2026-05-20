@@ -12,14 +12,40 @@ const db = {};
 exports.default = db;
 initialize();
 async function initialize() {
-    const { host, port, user, password, database } = config_json_1.default.database;
-    const connection = await promise_1.default.createConnection({ host, port, user, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS
-        \`${database}\`;`);
-    const sequelize = new sequelize_1.Sequelize(database, user, password, { dialect: 'mysql' });
-    db.Account = (0, account_model_1.default)(sequelize);
-    db.RefreshToken = (0, refresh_token_model_1.default)(sequelize);
+
+    const database = process.env.DB_NAME || config.database.database;
+    const user = process.env.DB_USER || config.database.user;
+    const password = process.env.DB_PASSWORD || config.database.password;
+    const host = process.env.DB_HOST || config.database.host;
+    const port = process.env.DB_PORT || config.database.port;
+
+    const sequelize = new Sequelize(
+        database,
+        user,
+        password,
+        {
+            host,
+            port,
+            dialect: 'mysql',
+
+            dialectOptions: {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false
+                }
+            },
+
+            logging: false
+        }
+    );
+
+    await sequelize.authenticate();
+
+    db.Account = AccountModel(sequelize);
+    db.RefreshToken = RefreshTokenModel(sequelize);
+
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
     db.RefreshToken.belongsTo(db.Account);
+
     await sequelize.sync();
 }
