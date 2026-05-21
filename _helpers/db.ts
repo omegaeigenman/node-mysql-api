@@ -45,8 +45,6 @@ async function initialize() {
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
     db.RefreshToken.belongsTo(db.Account);
 
-    if (!useSSL) {
     await sequelize.sync();
-}
 
 }
