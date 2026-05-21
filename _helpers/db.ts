@@ -1,3 +1,4 @@
+import 'mysql2';
 import config from '../config.json';
 import mysql from 'mysql2/promise';
 import { Sequelize } from 'sequelize';
@@ -31,10 +32,12 @@ async function initialize() {
         port,
         dialect: 'mysql',
         dialectOptions: useSSL
-            ? { ssl: { require: true, rejectUnauthorized: false } }
-            : {},
-        pool: { max: 2, min: 0, idle: 10000 }, // serverless-friendly
-        logging: false
+    ? {
+        ssl: { require: true, rejectUnauthorized: false },
+        connectTimeout: 8000  // fail fast instead of hanging
+    }
+    : { connectTimeout: 8000 },
+
     });
 
     db.Account = accountModel(sequelize);
@@ -42,5 +45,8 @@ async function initialize() {
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
     db.RefreshToken.belongsTo(db.Account);
 
+    if (!useSSL) {
     await sequelize.sync();
+}
+
 }
